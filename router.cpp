@@ -732,7 +732,7 @@ void CRouter::handle_rawsock_tcp_traffic(char* buf, int len)
     memcpy(reply_packet, packet_buf, MAX_PACKET_SIZE);
     struct iphdr *reply_iph = (struct iphdr *)reply_packet;
     iphdrlen = iph->ihl*4;
-    struct tcphdr *reply_tcph = (struct tcphdr *)(reply_iph + iphdrlen);
+    // struct tcphdr *reply_tcph = (struct tcphdr *)(reply_iph + iphdrlen);
 
     source.sin_addr.s_addr = iph->saddr;
     dest.sin_addr.s_addr = iph->daddr;

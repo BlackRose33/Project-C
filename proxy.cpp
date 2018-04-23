@@ -360,36 +360,43 @@ void CProxy::handle_tun_tcp_traffic(char* buf, int len)
 //handle tcp packet from routers
 void CProxy::handle_router_tcp_traffic(char* buf, int len, struct sockaddr_in si_other)
 {
-//     struct sockaddr_in source, dest;
-//     char log_buf[MAX_BUF_SIZE];
-//     char src_addr_buf[MAX_BUF_SIZE];
-//     char dst_addr_buf[MAX_BUF_SIZE];
+    printf("router tcp\n");
 
-//     int nsend=0;
+    struct sockaddr_in source, dest;
+    char log_buf[MAX_BUF_SIZE];
+    char src_addr_buf[MAX_BUF_SIZE];
+    char dst_addr_buf[MAX_BUF_SIZE];
 
-//     struct iphdr *iph = (struct iphdr *)buf;
-//     unsigned short iphdrlen;
-//     iphdrlen = iph->ihl*4;
-//     struct tcphdr *tcph=(struct tcphdr*)(buf + iphdrlen);
+    int nsend=0;
 
-//     source.sin_addr.s_addr = iph->saddr;
-//     dest.sin_addr.s_addr = iph->daddr;
-//     memset(log_buf, 0, MAX_BUF_SIZE);
-//     memset(src_addr_buf, 0, MAX_BUF_SIZE);
-//     memset(dst_addr_buf, 0, MAX_BUF_SIZE);
-//     strcpy(src_addr_buf, inet_ntoa(source.sin_addr));
-//     strcpy(dst_addr_buf, inet_ntoa(dest.sin_addr));
+    struct iphdr *iph = (struct iphdr *)buf;
+    unsigned short iphdrlen;
+    iphdrlen = iph->ihl*4;
+    struct tcphdr *tcph=(struct tcphdr*)(buf + iphdrlen);
 
-// // incoming TCP packet, circuit incoming: 0x1, src IP/port: 128.9.160.91:80, dst IP/port: 172.16.135.152:46446, seqno: 1297320489, ackno: 1384604859
-//     sprintf(log_buf, "ICMP from port: %d, src: %s, dst: %s, type: %d\n",ntohs(si_other.sin_port), src_addr_buf, dst_addr_buf, icmph->type);
-//     output_log(log_buf);
+    source.sin_addr.s_addr = iph->saddr;
+    dest.sin_addr.s_addr = _old_src;
+    memset(log_buf, 0, MAX_BUF_SIZE);
+    memset(src_addr_buf, 0, MAX_BUF_SIZE);
+    memset(dst_addr_buf, 0, MAX_BUF_SIZE);
+    strcpy(src_addr_buf, inet_ntoa(source.sin_addr));
+    strcpy(dst_addr_buf, inet_ntoa(dest.sin_addr));
+
+    //add the old addr and recompute the checksum;
+    iph->daddr = _old_src;
+    iph->check = 0;
+    iph->check = in_cksum((unsigned short*)iph, sizeof(struct iphdr));
+
+// incoming TCP packet, circuit incoming: 0x1, src IP/port: 128.9.160.91:80, dst IP/port: 172.16.135.152:46446, seqno: 1297320489, ackno: 1384604859
+    sprintf(log_buf, "incoming TCP packet, circuit incoming: 0x%02x, src IP/port: %s:%u, dst IP/port: %s:%u, seqno: %u, ackno: %u\n", iID, src_addr_buf, ntohs(tcph->source), dst_addr_buf, ntohs(tcph->dest), ntohs(tcph->seq), ntohs(tcph->ack_seq));
+    output_log(log_buf);
     
-//     /* write received packet to tun */
-//     nsend = write_data_TUN(buf, _tun_fd, len);
-//     if(nsend <=0 )
-//     {
-//     printf("**Proxy** failed write packet to tun\n");
-//     }
+    /* write received packet to tun */
+    nsend = write_data_TUN(buf, _tun_fd, len);
+    if(nsend <=0 )
+    {
+    printf("**Proxy** failed write packet to tun\n");
+    }
 }
 
 // handle icmp traffic from tunnel interface
@@ -555,6 +562,8 @@ void CProxy::handle_relay_msg(char* buf, int len, struct sockaddr_in si_other)
 	memcpy(buf+hlen, clear_packet, clen);
 	//check if the packet is correct, only for debug 
 	print_icmp_packet(buf+hlen, clen);
+    printf("decrypt\n");
+    print_tcp_packet(buf+hlen, clen);
 
 	//change destination IP and recompute checksum;
 	riph->daddr  = _old_src;
@@ -744,14 +753,14 @@ void CProxy::run()
 	    else if(iph->protocol == 6) 
 	    {
 		printf("**Proxy** PID: %d, TCP from port: %d, length:%d\n", getpid(), ntohs(si_other.sin_port), nread);
-		print_tcp_packet(recv_buf, nread);
+		handle_router_tcp_traffic(recv_buf, nread, si_other);
+        // print_tcp_packet(recv_buf, nread);
 		//write tcp packet back to tun;
 		//nsend = write_data_TUN(recv_buf, _tun_fd, nread);
 	    	//if(nsend <=0 )
 	    	//{
 		//	printf("**Proxy** failed write packet to tun\n");
 	    	//}
-
 	    }
 	    else
 	    {
