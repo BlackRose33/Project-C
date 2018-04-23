@@ -293,6 +293,75 @@ bool CProxy::fork_router()
     return true;
  }
 
+void CProxy::handle_tun_tcp_traffic(char* buf, int len)
+{
+    struct sockaddr_in source,dest;
+    char log_buf[MAX_BUF_SIZE];
+    char send_buf[MAX_PACKET_SIZE];
+    memset(send_buf,0, MAX_PACKET_SIZE);
+
+    char src_addr_buf[MAX_BUF_SIZE];
+    char dst_addr_buf[MAX_BUF_SIZE];
+
+    int nsend=0;
+    print_tcp_packet(buf,len);
+    struct iphdr *iph = (struct iphdr *)buf;
+    
+    unsigned short iphdrlen;
+    iphdrlen = iph->ihl*4;
+    struct tcphdr *tcph=(struct tcphdr*)(buf + iphdrlen);
+    // struct icmphdr *icmph = (struct icmphdr *)(buf + iphdrlen);
+
+
+    source.sin_addr.s_addr = iph->saddr;
+    dest.sin_addr.s_addr = iph->daddr;
+    memset(log_buf, 0, MAX_BUF_SIZE);
+    memset(src_addr_buf, 0, MAX_BUF_SIZE);
+    memset(dst_addr_buf, 0, MAX_BUF_SIZE);
+    strcpy(src_addr_buf, inet_ntoa(source.sin_addr));
+    strcpy(dst_addr_buf, inet_ntoa(dest.sin_addr));
+
+    sprintf(log_buf, "TCP from tunnel, src IP/port: %s:%u, dst IP/port: %s:%u, seqno: %u, ackno: %u \n",src_addr_buf, ntohs(tcph->source), dst_addr_buf, ntohs(tcph->dest), ntohs(tcph->seq), ntohs(tcph->ack_seq));
+
+    output_log(log_buf);
+    unsigned short cID = compute_circuit_id(0, _cc_seq);
+    int packet_len;
+
+    if (_stage > 6)
+    {
+    //remember the old src addr;
+    _old_src = iph->saddr;
+
+    //zero the src addr and recompute the checksum;
+    iph->saddr = htonl(0);
+    iph->check = 0;
+    iph->check = in_cksum((unsigned short*)iph, sizeof(struct iphdr));
+
+    //encrypt the entire packet with keys of all routers in the path
+    int elen;
+    char* ebuf =NULL;
+    //print the content of the packet, only for debug
+    print_packet_hex(buf, len);
+    encrypt_multiround_with_padding(buf, len, &ebuf, &elen, _num_hops);
+    //print the content of the packet, only for debug
+    print_packet_hex(ebuf, elen);
+
+    //construct the relay message
+    packet_len  = construct_relay_msg(send_buf, MAX_PACKET_SIZE, cID, ebuf, elen, CC_ENCRYPTED_RELAY, _stage);
+    delete [] ebuf;
+    }
+    nsend = send_data_UDP(send_buf, packet_len, rinfo[path[0]].r_addr);
+
+    if(nsend <=0)
+        {
+            printf("**Proxy** failed send packet via UDP\n");
+        }
+}
+
+void CProxy::handle_router_tcp_traffic(char* buf, int len, struct sockaddr_in si_other)
+{
+
+}
 
 // handle icmp traffic from tunnel interface
 void CProxy::handle_tun_icmp_traffic(char* buf, int len)
@@ -609,7 +678,8 @@ void CProxy::run()
 	}
 	else if(iph->protocol == 6) 
 	{
-	    print_tcp_packet(recv_buf, nread);
+        handle_tun_tcp_traffic(recv_buf, nread);
+	    // print_tcp_packet(recv_buf, nread);
 	    //nsend = send_data_UDP(recv_buf, nread, rinfo[rindex].r_addr);
 	    //if(nsend <=0)
 	    //{

@@ -55,6 +55,9 @@ class CProxy{
 	int construct_deffie_hellman_padding_msg(char* buf, int len, unsigned short cID, unsigned char key[], int keylen);
 	int construct_encrypted_circuit_ext_msg_padding(char* buf, int len, unsigned short cID, unsigned char nport[], int port_len);
 
+	void handle_tun_tcp_traffic(char* buf, int len);
+	void handle_router_tcp_traffic(char* buf, int len, struct sockaddr_in si_other);
+
 	void handle_tun_icmp_traffic(char* buf, int len);
 	void handle_router_icmp_traffic(char* buf, int len, struct sockaddr_in si_other);
 	void handle_relay_msg(char* buf, int len, struct sockaddr_in si_other);

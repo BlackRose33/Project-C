@@ -326,29 +326,29 @@ void CRouter::handle_relay_msg(char* buf, int len, struct sockaddr_in si_other)
 	    //last hop? send out via raw socket.
     	    if(cc._oport == last_hop)
     	    {
-		si.sin_addr.s_addr = riph->saddr;
-		strcpy(ssi, inet_ntoa(si.sin_addr));
-		if(ccrelaymsg->msg_type == CC_ENCRYPTED_RELAY)
-		{
-		    // change the source IP address and recompute checksum;
-		    riph->saddr = _rip;
-		    riph->check = 0;
-		    riph->check = in_cksum((unsigned short*)riph, sizeof(struct iphdr));
-		}
+        		si.sin_addr.s_addr = riph->saddr;
+        		strcpy(ssi, inet_ntoa(si.sin_addr));
+        		if(ccrelaymsg->msg_type == CC_ENCRYPTED_RELAY)
+        		{
+        		    // change the source IP address and recompute checksum;
+        		    riph->saddr = _rip;
+        		    riph->check = 0;
+        		    riph->check = in_cksum((unsigned short*)riph, sizeof(struct iphdr));
+        		}
 
-    	        printf("**Router** %d, reach the final hop, send packet out via raw socket\n",_index);
-		//for debug only
-		print_icmp_packet(buf+hlen, len-hlen);
-		print_packet_hex(buf+hlen+sizeof(struct iphdr), len-hlen-sizeof(struct iphdr));
+            	        printf("**Router** %d, reach the final hop, send packet out via raw socket\n",_index);
+        		//for debug only
+        		print_icmp_packet(buf+hlen, len-hlen);
+        		print_packet_hex(buf+hlen+sizeof(struct iphdr), len-hlen-sizeof(struct iphdr));
 
-		//send out the packet via raw socket.
+        		//send out the packet via raw socket.
     	        handle_proxy_icmp_traffic(buf+hlen, len-hlen, si_other);
 
-		//log
-		dest.sin_addr.s_addr = riph->daddr;
-		strcpy(sdest, inet_ntoa(dest.sin_addr));
-		sprintf(log_buf, "outgoing packet, circuit incoming: 0x%02x, incoming src:%s, outgoing src: %s, dst: %s\n", cc._iid, ssi, sso, sdest);
-		output_log(log_buf);
+        		//log
+        		dest.sin_addr.s_addr = riph->daddr;
+        		strcpy(sdest, inet_ntoa(dest.sin_addr));
+        		sprintf(log_buf, "outgoing packet, circuit incoming: 0x%02x, incoming src:%s, outgoing src: %s, dst: %s\n", cc._iid, ssi, sso, sdest);
+        		output_log(log_buf);
     	    }
     	    //otherwise, forward the message along the partial created path.
     	    else
@@ -694,6 +694,16 @@ void CRouter::self_reply_icmp(char* buf, int len, struct sockaddr_in si_other)
 
     }
 
+}
+
+void handle_rawsock_tcp_traffic(char* buf, int len)
+{
+
+}
+
+void handle_proxy_tcp_traffic(char* buf, int len, struct sockaddr_in si_other)
+{
+    
 }
 
 void CRouter::handle_proxy_icmp_traffic(char* buf, int len, struct sockaddr_in si_other)

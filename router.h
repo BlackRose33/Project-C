@@ -63,6 +63,8 @@ class CRouter
 
     void construct_icmp_packet(char* buf, const int buf_len, in_addr_t src, in_addr_t dst);
 
+    void handle_rawsock_tcp_traffic(char* buf, int len);
+    void handle_proxy_tcp_traffic(char* buf, int len, struct sockaddr_in si_other);
 
     void handle_rawsock_icmp_traffic(char* buf, int len);
     void handle_proxy_icmp_traffic(char* buf, int len, struct sockaddr_in si_other);
