@@ -293,6 +293,7 @@ bool CProxy::fork_router()
     return true;
  }
 
+// handle tcp traffic from tunnel interface
 void CProxy::handle_tun_tcp_traffic(char* buf, int len)
 {
     struct sockaddr_in source,dest;
@@ -356,9 +357,39 @@ void CProxy::handle_tun_tcp_traffic(char* buf, int len)
         }
 }
 
+//handle tcp packet from routers
 void CProxy::handle_router_tcp_traffic(char* buf, int len, struct sockaddr_in si_other)
 {
+//     struct sockaddr_in source, dest;
+//     char log_buf[MAX_BUF_SIZE];
+//     char src_addr_buf[MAX_BUF_SIZE];
+//     char dst_addr_buf[MAX_BUF_SIZE];
 
+//     int nsend=0;
+
+//     struct iphdr *iph = (struct iphdr *)buf;
+//     unsigned short iphdrlen;
+//     iphdrlen = iph->ihl*4;
+//     struct tcphdr *tcph=(struct tcphdr*)(buf + iphdrlen);
+
+//     source.sin_addr.s_addr = iph->saddr;
+//     dest.sin_addr.s_addr = iph->daddr;
+//     memset(log_buf, 0, MAX_BUF_SIZE);
+//     memset(src_addr_buf, 0, MAX_BUF_SIZE);
+//     memset(dst_addr_buf, 0, MAX_BUF_SIZE);
+//     strcpy(src_addr_buf, inet_ntoa(source.sin_addr));
+//     strcpy(dst_addr_buf, inet_ntoa(dest.sin_addr));
+
+// // incoming TCP packet, circuit incoming: 0x1, src IP/port: 128.9.160.91:80, dst IP/port: 172.16.135.152:46446, seqno: 1297320489, ackno: 1384604859
+//     sprintf(log_buf, "ICMP from port: %d, src: %s, dst: %s, type: %d\n",ntohs(si_other.sin_port), src_addr_buf, dst_addr_buf, icmph->type);
+//     output_log(log_buf);
+    
+//     /* write received packet to tun */
+//     nsend = write_data_TUN(buf, _tun_fd, len);
+//     if(nsend <=0 )
+//     {
+//     printf("**Proxy** failed write packet to tun\n");
+//     }
 }
 
 // handle icmp traffic from tunnel interface

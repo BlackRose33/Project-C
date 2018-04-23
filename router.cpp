@@ -710,12 +710,94 @@ void CRouter::self_reply_icmp(char* buf, int len, struct sockaddr_in si_other)
 
 }
 
-void handle_rawsock_tcp_traffic(char* buf, int len)
+void CRouter::handle_rawsock_tcp_traffic(char* buf, int len)
 {
+    //TODO 
+    char log_buf[MAX_BUF_SIZE];
+    struct sockaddr_in source,dest;
+    char src_addr_buf[MAX_BUF_SIZE];
+    char dst_addr_buf[MAX_BUF_SIZE];
+    int nsend;
 
+    struct iphdr *iph = (struct iphdr *)buf;
+    iphdrlen = iph->ihl*4;
+    struct tcphdr *tcph=(struct tcphdr*)(buf + iphdrlen);
+
+    print_tcp_packet(buf, len);
+    char reply_packet[MAX_PACKET_SIZE];
+    memset(reply_packet,0, MAX_PACKET_SIZE);
+
+                 
+    //copy the original tcp packet;
+    memcpy(reply_packet, packet_buf, MAX_PACKET_SIZE);
+    struct iphdr *reply_iph = (struct iphdr *)reply_packet;
+    iphdrlen = iph->ihl*4;
+    struct tcphdr *reply_tcph = (struct tcphdr *)(reply_iph + iphdrlen);
+
+    source.sin_addr.s_addr = iph->saddr;
+    dest.sin_addr.s_addr = iph->daddr;
+    memset(log_buf, 0, MAX_BUF_SIZE);
+    memset(src_addr_buf, 0, MAX_BUF_SIZE);
+    memset(dst_addr_buf, 0, MAX_BUF_SIZE);
+    strcpy(src_addr_buf, inet_ntoa(source.sin_addr));
+    strcpy(dst_addr_buf, inet_ntoa(dest.sin_addr));
+
+    // reply_iph->daddr = reply_iph->saddr; 
+    // reply_iph->saddr = iph->saddr;
+
+    // reply_iph->check=0;
+    // unsigned short checksum = in_cksum((unsigned short*)reply_iph, sizeof(struct iphdr));
+    // reply_iph->check=checksum;
+
+    // int old_plen = packet_len; 
+    int old_plen = len; 
+
+    char send_buf[MAX_BUF_SIZE];
+    memset(send_buf, 0, MAX_BUF_SIZE);
+    int new_packet_len = 0;
+    if(_stage >= 6)
+    {
+        //zero the dst ip;
+        reply_iph->daddr = htonl(0);
+        //recompute checksume;
+        reply_iph->check = 0;
+        reply_iph->check = in_cksum((unsigned short*)reply_iph, sizeof(struct iphdr));  
+        //encrypt the packet
+        
+        char * encrypted_payload = NULL;
+        int olen;
+
+        //encrypt the packet
+        char * clear_payload = new char [old_plen];
+        memset(clear_payload, 0, old_plen);
+        memcpy(clear_payload, reply_packet, old_plen);
+        encrypt_msg_with_padding(clear_payload, old_plen, &encrypted_payload, &olen, aes_key);
+        memcpy(reply_packet, encrypted_payload, olen);
+        //construct the encrypted relay message.
+        new_packet_len  = construct_relay_msg(send_buf, MAX_PACKET_SIZE, cc._iid, reply_packet, olen, CC_ENCRYPTED_RELAY_REPLY, _stage);
+        delete [] encrypted_payload;
+        delete [] clear_payload;
+
+    }
+
+
+    struct sockaddr_in next_hop;
+    next_hop.sin_family = AF_INET;
+    next_hop.sin_port = htons(cc._iport);
+    next_hop.sin_addr.s_addr =  htonl(INADDR_ANY);
+    nsend = send_data_UDP(send_buf, new_packet_len , next_hop);
+    sprintf(log_buf, "incoming TCP packet, src IP/port: %s:%u, dst IP/port: %s:%u, seqno: %u, ackno: %u, outgoing circuit: 0x%02x\n", src_addr_buf, ntohs(tcph->source), dst_addr_buf, ntohs(tcph->dest), ntohs(tcph->seq), ntohs(tcph->ack_seq), cc._iid);
+
+    // incoming TCP packet, src IP/port: 128.9.160.91:80, dst IP/port: 192.168.204.2:46446, seqno: 1297319946, ackno: 1384604858, outgoing circuit: 0x301
+
+    output_log(log_buf);
+    if( nsend <= 0)
+    {
+    printf("**Router** %d, failed send packet via UDP\n", _index);
+    }
 }
 
-void handle_proxy_tcp_traffic(char* buf, int len, struct sockaddr_in si_other)
+void CRouter::handle_proxy_tcp_traffic(char* buf, int len, struct sockaddr_in si_other)
 {
     char log_buf[MAX_BUF_SIZE];
     struct sockaddr_in in_source, out_source, dest;
@@ -733,8 +815,7 @@ void handle_proxy_tcp_traffic(char* buf, int len, struct sockaddr_in si_other)
     struct tcphdr *tcph=(struct tcphdr*)(buf + iphdrlen);
 
     //remember the original source IP;
-    in_source.sin_family = AF_INET;
-    in_source.sin_addr.s_addr = iph->saddr;
+    in_source.sin_addr.s_addr = htonl(0);
 
     //change source ip;
     out_source.sin_family = AF_INET;
@@ -754,7 +835,7 @@ void handle_proxy_tcp_traffic(char* buf, int len, struct sockaddr_in si_other)
 
     print_tcp_packet(buf, packet_len);
     //send out the tcp packet through tcp socket
-    send = send_TCP_packet(out_source, dest, (char*)tcph, (nread-iphdrlen));
+    nsend = send_TCP_packet(out_source, dest, (char*)tcph, (packet_len-iphdrlen));
 
     if(nsend<=0)
     {
