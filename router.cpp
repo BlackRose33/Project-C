@@ -720,7 +720,7 @@ void CRouter::handle_rawsock_tcp_traffic(char* buf, int len)
     int nsend;
 
     struct iphdr *iph = (struct iphdr *)buf;
-    iphdrlen = iph->ihl*4;
+    unsigned short iphdrlen = iph->ihl*4;
     struct tcphdr *tcph=(struct tcphdr*)(buf + iphdrlen);
 
     print_tcp_packet(buf, len);
