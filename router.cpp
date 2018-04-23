@@ -728,10 +728,10 @@ void CRouter::handle_rawsock_tcp_traffic(char* buf, int len)
     memset(reply_packet,0, MAX_PACKET_SIZE);
 
                  
-    //copy the original tcp packet;
-    memcpy(reply_packet, packet_buf, MAX_PACKET_SIZE);
-    struct iphdr *reply_iph = (struct iphdr *)reply_packet;
-    iphdrlen = iph->ihl*4;
+    // // copy the original tcp packet;
+    // memcpy(reply_packet, packet_buf, MAX_PACKET_SIZE);
+    // struct iphdr *reply_iph = (struct iphdr *)reply_packet;
+    // iphdrlen = iph->ihl*4;
     // struct tcphdr *reply_tcph = (struct tcphdr *)(reply_iph + iphdrlen);
 
     source.sin_addr.s_addr = iph->saddr;
@@ -758,10 +758,10 @@ void CRouter::handle_rawsock_tcp_traffic(char* buf, int len)
     if(_stage >= 6)
     {
         //zero the dst ip;
-        reply_iph->daddr = htonl(0);
+        iph->daddr = htonl(0);
         //recompute checksume;
-        reply_iph->check = 0;
-        reply_iph->check = in_cksum((unsigned short*)reply_iph, sizeof(struct iphdr));  
+        iph->check = 0;
+        iph->check = in_cksum((unsigned short*)reply_iph, sizeof(struct iphdr));  
         //encrypt the packet
         
         char * encrypted_payload = NULL;
@@ -770,7 +770,7 @@ void CRouter::handle_rawsock_tcp_traffic(char* buf, int len)
         //encrypt the packet
         char * clear_payload = new char [old_plen];
         memset(clear_payload, 0, old_plen);
-        memcpy(clear_payload, reply_packet, old_plen);
+        memcpy(clear_payload, buf, old_plen);
         encrypt_msg_with_padding(clear_payload, old_plen, &encrypted_payload, &olen, aes_key);
         memcpy(reply_packet, encrypted_payload, olen);
         //construct the encrypted relay message.

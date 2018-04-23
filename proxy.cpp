@@ -388,7 +388,7 @@ void CProxy::handle_router_tcp_traffic(char* buf, int len)
     iph->check = in_cksum((unsigned short*)iph, sizeof(struct iphdr));
 
 // incoming TCP packet, circuit incoming: 0x1, src IP/port: 128.9.160.91:80, dst IP/port: 172.16.135.152:46446, seqno: 1297320489, ackno: 1384604859
-    // sprintf(log_buf, "incoming TCP packet, circuit incoming: 0x%02x, src IP/port: %s:%u, dst IP/port: %s:%u, seqno: %u, ackno: %u\n", iID, src_addr_buf, ntohs(tcph->source), dst_addr_buf, ntohs(tcph->dest), ntohs(tcph->seq), ntohs(tcph->ack_seq));
+    sprintf(log_buf, "incoming TCP packet, circuit incoming: 0x, src IP/port: %s:%u, dst IP/port: %s:%u, seqno: %u, ackno: %u\n", src_addr_buf, ntohs(tcph->source), dst_addr_buf, ntohs(tcph->dest), ntohs(tcph->seq), ntohs(tcph->ack_seq));
     // output_log(log_buf);
     
     /* write received packet to tun */
@@ -562,9 +562,13 @@ void CProxy::handle_relay_msg(char* buf, int len, struct sockaddr_in si_other)
 	memcpy(buf+hlen, clear_packet, clen);
 	//check if the packet is correct, only for debug 
     if(riph->protocol == 1)
+    {
     	print_icmp_packet(buf+hlen, clen);
+    }
     else if(riph->protocol == 6)
+    {
         print_tcp_packet(buf+hlen, clen); 
+    }
 
 	//change destination IP and recompute checksum;
 	riph->daddr  = _old_src;
@@ -595,9 +599,13 @@ void CProxy::handle_relay_msg(char* buf, int len, struct sockaddr_in si_other)
 
     memset(log_buf, 0, MAX_BUF_SIZE);
     if(riph->protocol == 1)
+    {
         sprintf(log_buf, "incoming packet, circuit incoming: 0x%02x, src:%s, dst: %s\n", iID, src_addr_buf, dst_addr_buf);
+    }
     else if(riph->protocol == 6)
+    {
         sprintf(log_buf, "incoming TCP packet, circuit incoming: 0x%02x, src IP/port: %s:%u, dst IP/port: %s:%u, seqno: %u, ackno: %u\n", iID, src_addr_buf, ntohs(tcph->source), dst_addr_buf, ntohs(tcph->dest), ntohs(tcph->seq), ntohs(tcph->ack_seq));
+    }
     printf(log_buf);
     output_log(log_buf);
   
