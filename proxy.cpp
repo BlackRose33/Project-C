@@ -310,8 +310,6 @@ void CProxy::handle_tun_tcp_traffic(char* buf, int len)
     unsigned short iphdrlen;
     iphdrlen = iph->ihl*4;
     struct tcphdr *tcph=(struct tcphdr*)(buf + iphdrlen);
-    // struct icmphdr *icmph = (struct icmphdr *)(buf + iphdrlen);
-
 
     source.sin_addr.s_addr = iph->saddr;
     dest.sin_addr.s_addr = iph->daddr;

@@ -335,20 +335,34 @@ void CRouter::handle_relay_msg(char* buf, int len, struct sockaddr_in si_other)
         		    riph->check = 0;
         		    riph->check = in_cksum((unsigned short*)riph, sizeof(struct iphdr));
         		}
+//TODO          
+                if(riph->protocol == 1)
+                {
+                	printf("**Router** %d, reach the final hop, send icmp packet out via raw socket\n",_index);
+            		//for debug only
+            		print_icmp_packet(buf+hlen, len-hlen);
+            		print_packet_hex(buf+hlen+sizeof(struct iphdr), len-hlen-sizeof(struct iphdr));
 
-            	        printf("**Router** %d, reach the final hop, send packet out via raw socket\n",_index);
-        		//for debug only
-        		print_icmp_packet(buf+hlen, len-hlen);
-        		print_packet_hex(buf+hlen+sizeof(struct iphdr), len-hlen-sizeof(struct iphdr));
+            		//send out the packet via raw socket.
+        	        handle_proxy_icmp_traffic(buf+hlen, len-hlen, si_other);
 
-        		//send out the packet via raw socket.
-    	        handle_proxy_icmp_traffic(buf+hlen, len-hlen, si_other);
+            		//log
+            		dest.sin_addr.s_addr = riph->daddr;
+            		strcpy(sdest, inet_ntoa(dest.sin_addr));
+            		sprintf(log_buf, "outgoing packet, circuit incoming: 0x%02x, incoming src:%s, outgoing src: %s, dst: %s\n", cc._iid, ssi, sso, sdest);
+            		output_log(log_buf);
+                }
+                else if(riph->protocol == 6)
+                {
+                    printf("**Router** %d, reach the final hop, send tcp packet out via raw socket\n",_index);
+                    //for debug only
+                    print_tcp_packet(buf+hlen, len-hlen);
+                    print_packet_hex(buf+hlen+sizeof(struct iphdr), len-hlen-sizeof(struct iphdr));
 
-        		//log
-        		dest.sin_addr.s_addr = riph->daddr;
-        		strcpy(sdest, inet_ntoa(dest.sin_addr));
-        		sprintf(log_buf, "outgoing packet, circuit incoming: 0x%02x, incoming src:%s, outgoing src: %s, dst: %s\n", cc._iid, ssi, sso, sdest);
-        		output_log(log_buf);
+                    //send out the packet via tcp socket.
+                    handle_proxy_tcp_traffic(buf+hlen, len-hlen, si_other);
+                }
+
     	    }
     	    //otherwise, forward the message along the partial created path.
     	    else
@@ -703,7 +717,52 @@ void handle_rawsock_tcp_traffic(char* buf, int len)
 
 void handle_proxy_tcp_traffic(char* buf, int len, struct sockaddr_in si_other)
 {
+    char log_buf[MAX_BUF_SIZE];
+    struct sockaddr_in in_source, out_source, dest;
+    char in_src_addr_buf[MAX_BUF_SIZE];
+    char out_src_addr_buf[MAX_BUF_SIZE];
+    char dst_addr_buf[MAX_BUF_SIZE];
+    int nsend;
 
+    memcpy(packet_buf, buf,len);
+    packet_len = len;
+    unsigned short iphdrlen;
+    struct iphdr *iph = (struct iphdr *)buf;
+
+    iphdrlen = iph->ihl*4;
+    struct tcphdr *tcph=(struct tcphdr*)(buf + iphdrlen);
+
+    //remember the original source IP;
+    in_source.sin_family = AF_INET;
+    in_source.sin_addr.s_addr = iph->saddr;
+
+    //change source ip;
+    out_source.sin_family = AF_INET;
+    out_source.sin_addr.s_addr = _rip;
+
+    //copy destination ip 
+    dest.sin_family = AF_INET;
+    dest.sin_addr.s_addr = iph->daddr;
+    
+    memset(log_buf, 0, MAX_BUF_SIZE);
+    memset(in_src_addr_buf, 0, MAX_BUF_SIZE);
+    memset(out_src_addr_buf, 0, MAX_BUF_SIZE);
+    memset(dst_addr_buf, 0, MAX_BUF_SIZE);
+    strcpy(in_src_addr_buf, inet_ntoa(in_source.sin_addr));
+    strcpy(out_src_addr_buf, inet_ntoa(out_source.sin_addr));
+    strcpy(dst_addr_buf, inet_ntoa(dest.sin_addr));     
+
+    print_tcp_packet(buf, packet_len);
+    //send out the tcp packet through tcp socket
+    send = send_TCP_packet(out_source, dest, (char*)tcph, (nread-iphdrlen));
+
+    if(nsend<=0)
+    {
+    printf("**Router** %d, failed send packet via RAW socket\n", _index);
+    }
+    //log
+    sprintf(log_buf, "outgoing TCP packet, circuit incoming: 0x%02x, incoming src IP/port: %s/%u, outgoing src IP/port: %s:%u, dst IP/port: %s:%u, seqno: %u, ackno: %u\n", cc._iid, in_src_addr_buf, ntohs(tcph->source), out_src_addr_buf, ntohs(tcph->source), dst_addr_buf, ntohs(tcph->dest), ntohs(tcph->seq), ntohs(tcph->ack_seq));
+    output_log(log_buf);
 }
 
 void CRouter::handle_proxy_icmp_traffic(char* buf, int len, struct sockaddr_in si_other)
@@ -904,6 +963,7 @@ void CRouter::run()
 	     struct tcphdr *tcph = (struct tcphdr *)(recv_buf + iphdrlen);
 	     if(iph->protocol == 6 && ntohs(tcph->source) == 80)
 	     {
+            handle_rawsock_tcp_traffic(recv_buf, nread);
 		 printf("**Router** %d, PID: %d, TCP from raw socket, length: %d\n", _index, getpid(), nread);
 		 print_tcp_packet(recv_buf, nread);
 
