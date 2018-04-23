@@ -419,7 +419,7 @@ void CProxy::handle_tun_icmp_traffic(char* buf, int len)
 	    	packet_len  = construct_relay_msg(send_buf, MAX_PACKET_SIZE, cID, buf, len, CC_RELAY_MSGTYPE, _stage);
 	    }
 
-	    if (_stage == 6)
+	    if (_stage >= 6)
 	    {
 		//remember the old src addr;
 		_old_src = iph->saddr;
@@ -515,7 +515,7 @@ void CProxy::handle_relay_msg(char* buf, int len, struct sockaddr_in si_other)
     print_buf_hex((char*)ccrelaymsg, len-(sizeof(struct iphdr)), ntohs(si_other.sin_port)); 
  
     int hlen =  sizeof(struct iphdr) + sizeof(struct cc_relay_msg);
-    if(_stage == 6)
+    if(_stage >= 6)
     {
 
 	int plen = len - hlen; 
@@ -592,7 +592,7 @@ bool CProxy::collect_router_info()
 	struct sockaddr_in rip;
 	rip.sin_addr.s_addr = rinfo[index].nIP;
 	//set the key for the router
-	if(_stage == 6)
+	if(_stage >= 6)
 	{
 	    //assign key to routers, proxy's key ^ (router's index)16
 	    set_router_key(index);
@@ -859,7 +859,7 @@ bool CProxy::create_circuit()
 	memset(msg, 0, MAX_PACKET_SIZE);
 	int packet_len;
 	//first send faked deffie hellman message to distribute keys to routers;
-	if(_stage == 6)
+	if(_stage >= 6)
 	{
 	    //send faked deffie hellman message to router
 	    memset(msg, 0, MAX_PACKET_SIZE);
@@ -890,7 +890,7 @@ bool CProxy::create_circuit()
 
 	//start building circuit 
 	memset(msg, 0, MAX_PACKET_SIZE);
-	if(_stage == 6)
+	if(_stage >= 6)
 	{
 	    char clear_port[ENC_PORT_LEN];
 	    memset(clear_port, 0, ENC_PORT_LEN);

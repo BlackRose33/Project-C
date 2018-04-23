@@ -544,7 +544,7 @@ void CRouter::handle_ccext_msg(char* buf, int len, struct sockaddr_in si_other)
     if(iID == cc._iid )
     {
 
-	if(_stage == 6)
+	if(_stage >= 6)
 	{
 	   
 	    //decrypt the port number in the circuit extend message
@@ -577,7 +577,7 @@ void CRouter::handle_ccext_msg(char* buf, int len, struct sockaddr_in si_other)
     }
     else
     {
-	if(_stage == 6)
+	if(_stage >= 6)
 	{
 
 	    char * decrypted_port = NULL;
@@ -703,7 +703,7 @@ void handle_rawsock_tcp_traffic(char* buf, int len)
 
 void handle_proxy_tcp_traffic(char* buf, int len, struct sockaddr_in si_other)
 {
-    
+
 }
 
 void CRouter::handle_proxy_icmp_traffic(char* buf, int len, struct sockaddr_in si_other)
@@ -814,7 +814,7 @@ void CRouter::handle_rawsock_icmp_traffic(char* buf, int len)
 	    new_packet_len  = construct_relay_msg(send_buf, MAX_PACKET_SIZE, cc._iid, reply_packet, old_plen, CC_RELAY_BACK_MSGTYPE, _stage);
 	}
 
-	if(_stage == 6)
+	if(_stage >= 6)
 	{
 	    //zero the dst ip;
 	    reply_iph->daddr = htonl(0);
