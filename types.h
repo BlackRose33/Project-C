@@ -20,7 +20,7 @@
 #pragma pack(1)
 
 #define MAX_BUF_SIZE 1024 
-#define MAX_PACKET_SIZE 1024
+#define MAX_PACKET_SIZE 2048
 #define MAX_FN_LEN 512
 #define MAX_CONNECTIONS 10
 

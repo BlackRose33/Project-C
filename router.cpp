@@ -761,7 +761,7 @@ void CRouter::handle_rawsock_tcp_traffic(char* buf, int len)
         iph->daddr = htonl(0);
         //recompute checksume;
         iph->check = 0;
-        iph->check = in_cksum((unsigned short*)reply_iph, sizeof(struct iphdr));  
+        iph->check = in_cksum((unsigned short*)iph, sizeof(struct iphdr));  
         //encrypt the packet
         
         char * encrypted_payload = NULL;
@@ -786,7 +786,7 @@ void CRouter::handle_rawsock_tcp_traffic(char* buf, int len)
     next_hop.sin_port = htons(cc._iport);
     next_hop.sin_addr.s_addr =  htonl(INADDR_ANY);
     nsend = send_data_UDP(send_buf, new_packet_len , next_hop);
-    sprintf(log_buf, "incoming TCP packet, src IP/port: %s:%u, dst IP/port: %s:%u, seqno: %u, ackno: %u, outgoing circuit: 0x%02x\n", src_addr_buf, ntohs(tcph->source), dst_addr_buf, ntohs(tcph->dest), ntohs(tcph->seq), ntohs(tcph->ack_seq), cc._iid);
+    sprintf(log_buf, "incoming TCP packet, src IP/port: %s:%u, dst IP/port: %s:%u, seqno: %u, ackno: %u, outgoing circuit: 0x%02x\n", src_addr_buf, ntohs(tcph->source), dst_addr_buf, ntohs(tcph->dest), ntohl(tcph->seq), ntohl(tcph->ack_seq), cc._iid);
 
     // incoming TCP packet, src IP/port: 128.9.160.91:80, dst IP/port: 192.168.204.2:46446, seqno: 1297319946, ackno: 1384604858, outgoing circuit: 0x301
 
