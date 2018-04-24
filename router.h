@@ -10,6 +10,10 @@ class CRouter
 
     struct circuit cc;
 
+    struct circuit ccs[MAX_CONNECTIONS];
+    struct flow rflow[MAX_CONNECTIONS];
+    int _num_flow;
+
     char _logfn[MAX_FN_LEN];
     int _stage;
     int _index;

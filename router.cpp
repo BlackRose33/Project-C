@@ -11,6 +11,11 @@ CRouter::CRouter(int stage, int index, struct sockaddr_in paddr, unsigned long i
     _index = index;
     _cc_seq = 1;
     _rip = ip;
+
+    _num_flow = 0;
+    memset(ccs,0,sizeof(struct circuit)*MAX_CONNECTIONS); 
+    memset(rflow,0,sizeof(struct flow)*MAX_CONNECTIONS);   
+
     memset(&cc,0,sizeof(struct circuit));
     memcpy(&_paddr, &paddr, sizeof( struct sockaddr_in));
     printf("router: proxy port: %d\n", ntohs(_paddr.sin_port));

@@ -53,8 +53,8 @@ struct flow
    unsigned short src_port;
    unsigned short dst_port;
    unsigned short protocol;
-   struct in_addr src_ip;
-   struct in_addr dst_ip;
+   unsigned long src_ip;
+   unsigned long dst_ip;
    int seq;
 };
 

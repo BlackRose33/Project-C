@@ -75,6 +75,10 @@ CProxy::CProxy()
     _tun_fd=-1;
     _sock_fd=-1;
 
+    _num_flow = 0;
+
+    memset(pflow,0,sizeof(struct flow)*MAX_CONNECTIONS);
+
     unsigned char key[KEY_LEN];
     memset(key, 0,KEY_LEN);
     generate_random_key(key,  KEY_LEN);
