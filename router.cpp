@@ -1051,19 +1051,19 @@ void CRouter::run()
 
 
 		 //change ip addresses
-		 iph->daddr=old_tcp_saddr.sin_addr.s_addr;
-		 iph->check = 0;
+		 //iph->daddr=old_tcp_saddr.sin_addr.s_addr;
+		 //iph->check = 0;
 		 //change the ip id;
-		 iph->id=old_ip_id;
+		 //iph->id=old_ip_id;
 		 //recompute check sume
-		 iph->check = in_cksum((unsigned short*)iph, sizeof(struct iphdr));
+		 //iph->check = in_cksum((unsigned short*)iph, sizeof(struct iphdr));
 
-		 tcph->check=0;
+		 //tcph->check=0;
 		 //change tcp port (only needed when the raw socket use a different port)
-		 tcph->dest = old_tcp_port;
+		 //tcph->dest = old_tcp_port;
 		 //recompute TCP checksum
-		 tcph->check= in_cksum_tcp(iph->saddr, old_tcp_saddr.sin_addr.s_addr, (unsigned short *)tcph, ((unsigned int)tcph->doff)*4);//sizeof(struct tcphdr));
-
+		 //tcph->check= in_cksum_tcp(iph->saddr, old_tcp_saddr.sin_addr.s_addr, (unsigned short *)tcph, ((unsigned int)tcph->doff)*4);//sizeof(struct tcphdr));
+		//print_tcp_packet(recv_buf, nread);
 
 		 nsend = send_data_UDP(recv_buf, nread, _paddr);
 

@@ -320,7 +320,7 @@ void CProxy::handle_tun_tcp_traffic(char* buf, int len)
     strcpy(src_addr_buf, inet_ntoa(source.sin_addr));
     strcpy(dst_addr_buf, inet_ntoa(dest.sin_addr));
 
-    sprintf(log_buf, "TCP from tunnel, src IP/port: %s:%u, dst IP/port: %s:%u, seqno: %u, ackno: %u \n",src_addr_buf, ntohs(tcph->source), dst_addr_buf, ntohs(tcph->dest), ntohs(tcph->seq), ntohs(tcph->ack_seq));
+    sprintf(log_buf, "TCP from tunnel, src IP/port: %s:%u, dst IP/port: %s:%u, seqno: %u, ackno: %u \n",src_addr_buf, ntohs(tcph->source), dst_addr_buf, ntohs(tcph->dest), ntohl(tcph->seq), ntohl(tcph->ack_seq));
 
     output_log(log_buf);
     unsigned short cID = compute_circuit_id(0, _cc_seq);
