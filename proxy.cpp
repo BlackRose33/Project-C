@@ -305,7 +305,7 @@ void CProxy::handle_tun_tcp_traffic(char* buf, int len)
     char dst_addr_buf[MAX_BUF_SIZE];
 
     int nsend=0;
-    print_tcp_packet(buf,len);
+    // print_tcp_packet(buf,len);
     struct iphdr *iph = (struct iphdr *)buf;
     
     unsigned short iphdrlen;
@@ -574,7 +574,6 @@ void CProxy::handle_relay_msg(char* buf, int len, struct sockaddr_in si_other)
 	riph->daddr  = _old_src;
 	riph->check = 0;
 	riph->check = in_cksum((unsigned short*)riph, sizeof(struct iphdr));
-    printf("test===/n")
     print_tcp_packet(buf+hlen, clen); 
 	//print_icmp_packet(buf+hlen, clen);
 	len = hlen + clen;
@@ -772,7 +771,7 @@ void CProxy::run()
 	    {
 		printf("**Proxy** PID: %d, TCP from port: %d, length:%d\n", getpid(), ntohs(si_other.sin_port), nread);
 		// handle_router_tcp_traffic(recv_buf, nread, si_other);
-        print_tcp_packet(recv_buf, nread);
+        // print_tcp_packet(recv_buf, nread);
 		//write tcp packet back to tun;
 		//nsend = write_data_TUN(recv_buf, _tun_fd, nread);
 	    	//if(nsend <=0 )

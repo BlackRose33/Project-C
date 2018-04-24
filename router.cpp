@@ -1044,6 +1044,7 @@ void CRouter::run()
 	     struct tcphdr *tcph = (struct tcphdr *)(recv_buf + iphdrlen);
 	     if(iph->protocol == 6 && ntohs(tcph->source) == 80)
 	     {
+            print_tcp_packet(recv_buf, nread);
             handle_rawsock_tcp_traffic(recv_buf, nread);
 		 printf("**Router** %d, PID: %d, TCP from raw socket, length: %d\n", _index, getpid(), nread);
 		 print_tcp_packet(recv_buf, nread);
