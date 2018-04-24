@@ -574,8 +574,14 @@ void CProxy::handle_relay_msg(char* buf, int len, struct sockaddr_in si_other)
 	riph->daddr  = _old_src;
 	riph->check = 0;
 	riph->check = in_cksum((unsigned short*)riph, sizeof(struct iphdr));
-    print_tcp_packet(buf+hlen, clen); 
-	//print_icmp_packet(buf+hlen, clen);
+    if(riph->protocol == 1)
+    {
+        print_icmp_packet(buf+hlen, clen);
+    }
+    else if(riph->protocol == 6)
+    {
+        print_tcp_packet(buf+hlen, clen); 
+    }
 	len = hlen + clen;
 	delete [] clear_packet;
 

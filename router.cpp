@@ -842,7 +842,7 @@ void CRouter::handle_proxy_tcp_traffic(char* buf, int len, struct sockaddr_in si
     printf("**Router** %d, failed send packet via RAW socket\n", _index);
     }
     //log
-    sprintf(log_buf, "outgoing TCP packet, circuit incoming: 0x%02x, incoming src IP/port: %s/%u, outgoing src IP/port: %s:%u, dst IP/port: %s:%u, seqno: %u, ackno: %u\n", cc._iid, in_src_addr_buf, ntohs(tcph->source), out_src_addr_buf, ntohs(tcph->source), dst_addr_buf, ntohs(tcph->dest), ntohs(tcph->seq), ntohs(tcph->ack_seq));
+    sprintf(log_buf, "outgoing TCP packet, circuit incoming: 0x%02x, incoming src IP/port: %s/%u, outgoing src IP/port: %s:%u, dst IP/port: %s:%u, seqno: %u, ackno: %u\n", cc._iid, in_src_addr_buf, ntohs(tcph->source), out_src_addr_buf, ntohs(tcph->source), dst_addr_buf, ntohs(tcph->dest), ntohl(tcph->seq), ntohl(tcph->ack_seq));
     output_log(log_buf);
 }
 
@@ -1124,20 +1124,24 @@ void CRouter::run()
 		struct cc_ext_msg * ccextmsg = (struct cc_ext_msg*)(iph+1);
 		if(ccextmsg->msg_type == FAKE_DIFFIE_HELLMAN)
 		{
+            printf("fake diffie hellman msg\n");
 		    handle_deffie_hellman_msg(recv_buf,nread,si_other);
 		}
 		if(ccextmsg->msg_type == CC_EXT_MSGTYPE || ccextmsg->msg_type == CC_ENCRYPTED_EXT)
 		{
+            printf("ccext msg\n");
 		    handle_ccext_msg(recv_buf,nread,si_other);
 		}
 
 		if(ccextmsg->msg_type == CC_EXT_DONE_MSGTYPE || ccextmsg->msg_type == CC_ENCRYPTED_EXT_DONE)
 		{
+            printf("ccext done msg\n");
 		    handle_ccext_done_msg(recv_buf,nread,si_other);
 		}
 
 		if(ccextmsg->msg_type == CC_RELAY_MSGTYPE || ccextmsg->msg_type == CC_RELAY_BACK_MSGTYPE || ccextmsg->msg_type == CC_ENCRYPTED_RELAY || ccextmsg->msg_type == CC_ENCRYPTED_RELAY_REPLY)
 		{
+            printf("relay msg\n");
 		    handle_relay_msg(recv_buf,nread,si_other);
 		}
 
