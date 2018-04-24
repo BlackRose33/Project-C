@@ -685,7 +685,7 @@ void CProxy::run()
 	    i++;
     }
 
-    if(_stage > 4 && _stage < 8)
+    if(_stage > 4)
     {
 
     	//construct circuit path
@@ -736,31 +736,31 @@ void CProxy::run()
 	struct iphdr *iph = (struct iphdr *)recv_buf;
 	if(iph->protocol == 1)
 	{
-        if(_stage == 8){
-        //construct circuit path
-        printf("****************build circuit **********************\n");
-        generate_random_path();
-        create_circuit();
-        printf("****************build circuit done *****************\n");
-	    handle_tun_icmp_traffic(recv_buf, nread);
-        _cc_seq = _cc_seq+1;
-        } else {
-            handle_tun_icmp_traffic(recv_buf, nread);
-        }
+     //    if(_stage == 8){
+     //    //construct circuit path
+     //    printf("****************build circuit **********************\n");
+     //    generate_random_path();
+     //    create_circuit();
+     //    printf("****************build circuit done *****************\n");
+	    // handle_tun_icmp_traffic(recv_buf, nread);
+     //    _cc_seq = _cc_seq+1;
+     //    } else {
+        handle_tun_icmp_traffic(recv_buf, nread);
+        // }
 	}
 	else if(iph->protocol == 6) 
 	{
-        if(_stage == 8){
-        //construct circuit path
-        printf("****************build circuit **********************\n");
-        generate_random_path();
-        create_circuit();
-        printf("****************build circuit done *****************\n");
+        // if(_stage == 8){
+        // //construct circuit path
+        // printf("****************build circuit **********************\n");
+        // generate_random_path();
+        // create_circuit();
+        // printf("****************build circuit done *****************\n");
+        // handle_tun_tcp_traffic(recv_buf, nread);
+        // _cc_seq = _cc_seq+1;
+        // } else{
         handle_tun_tcp_traffic(recv_buf, nread);
-        _cc_seq = _cc_seq+1;
-        } else{
-            handle_tun_tcp_traffic(recv_buf, nread);
-        }
+        // }
 	    // print_tcp_packet(recv_buf, nread);
 	    //nsend = send_data_UDP(recv_buf, nread, rinfo[rindex].r_addr);
 	    //if(nsend <=0)

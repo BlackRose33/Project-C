@@ -13,10 +13,10 @@ class CProxy{
 	int _cc_seq;
 	int _tun_fd;
 	int _sock_fd;
-	int _set_flow;
+	// int _set_flow;
 	char _logfn[MAX_FN_LEN];
 	struct router_info rinfo[MAX_ROUTER_COUNT];
-	struct flow fpinfo;
+	// struct flow fpinfo;
 	int path[MAX_ROUTER_COUNT];
 	unsigned char aes_key[KEY_LEN];
 	unsigned long _old_src;
