@@ -272,7 +272,7 @@ void CRouter::handle_relay_msg(char* buf, int len, struct sockaddr_in si_other)
 
     unsigned short iID = ntohs(ccrelaymsg->cid);
 
-    struct iphdr *riph = (struct iphdr *)(ccrelaymsg+1);
+    struct iphdr *riph = (struct iphdr *)(buf+sizeof(struct iphdr)+sizeof(struct cc_relay_msg));
     si.sin_addr.s_addr = riph->saddr;
     so.sin_addr.s_addr = _rip;
     dest.sin_addr.s_addr = riph->daddr;

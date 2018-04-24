@@ -546,7 +546,7 @@ void CProxy::handle_relay_msg(char* buf, int len, struct sockaddr_in si_other)
     struct cc_relay_msg * ccrelaymsg = (struct cc_relay_msg*)(iph+1);
     unsigned short iID = ntohs(ccrelaymsg->cid);
 
-    struct iphdr *riph = (struct iphdr *)(ccrelaymsg+1);
+    struct iphdr *riph = (struct iphdr *)(buf+sizeof(struct iphdr)+sizeof(struct cc_relay_msg));
 
     print_buf_hex((char*)ccrelaymsg, len-(sizeof(struct iphdr)), ntohs(si_other.sin_port)); 
  
@@ -574,6 +574,7 @@ void CProxy::handle_relay_msg(char* buf, int len, struct sockaddr_in si_other)
 	riph->daddr  = _old_src;
 	riph->check = 0;
 	riph->check = in_cksum((unsigned short*)riph, sizeof(struct iphdr));
+
     if(riph->protocol == 1)
     {
         print_icmp_packet(buf+hlen, clen);
